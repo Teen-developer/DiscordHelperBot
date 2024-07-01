@@ -2,18 +2,16 @@ import bisect
 import tortoise
 import tortoise.fields
 
-from enum import Enum
+from enum import IntEnum
 from utils import save_model_after
-
-
-class LevelChange(Enum):
-    LEVELUP = 1
-    SAME = 2
-    LEVELDOWN = 3
 
 
 class User(tortoise.Model):
     EXP_TO_LVLUP = [5, 25, 50, 100, 175, 250, 500, 1000, 2500]
+    class LevelChange(IntEnum):
+        level_up = 1
+        same = 2
+        level_down = 3
 
     id = tortoise.fields.BigIntField(primary_key=True)
     discord_id = tortoise.fields.BigIntField()
@@ -30,11 +28,11 @@ class User(tortoise.Model):
         self.helper_level = new_level
 
         if new_level > old_level:
-            return LevelChange.LEVELUP
+            return self.LevelChange.level_up
         if new_level < old_level:
-            return LevelChange.LEVELDOWN
+            return self.LevelChange.level_down
 
-        return LevelChange.SAME
+        return self.LevelChange.same
 
     async def set_rep(self, amount: int) -> LevelChange:
         to_add = amount - self.helper_reputation
@@ -46,13 +44,13 @@ class User(tortoise.Model):
         return remaining_rep
 
 
-class TicketStatus(Enum):
+class TicketStatus(IntEnum):
     created = 0
     burning = 1
     resolved = 2
 
 
-class TicketPriority(Enum):
+class TicketPriority(IntEnum):
     regular = 0
     golden = 1
 
