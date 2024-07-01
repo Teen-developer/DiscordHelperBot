@@ -8,3 +8,6 @@ class NotInHelpForum(CheckFailure):
 class NotAThreadOwner(CheckFailure):
     pass
 
+
+class ThreadAlreadyAnswered(CheckFailure):
+    pass
