@@ -30,8 +30,9 @@ class User(tortoise.Model):
     id = tortoise.fields.BigIntField(primary_key=True)
     helper_reputation = tortoise.fields.IntField(default=0)
     helper_level = tortoise.fields.IntField(default=0)
+    asked_questions = tortoise.fields.IntField(default=0)
+    resolved_questions = tortoise.fields.IntField(default=0)
 
-    @save_model_after
     async def change_rep(self, amount: int) -> tuple[UserLevelChange, int]:
         new_rep = self.helper_reputation + amount
         new_level = bisect.bisect_right(self.EXP_TO_LVLUP, new_rep)
