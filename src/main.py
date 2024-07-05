@@ -29,7 +29,7 @@ async def main():
     await Tortoise.init(
         db_url=(
             f"asyncpg://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
-            f"@postgres_db:5432/{os.getenv('POSTGRES_DB')}"),
+            f"@postgres-db:5432/{os.getenv('POSTGRES_DB')}"),
         modules={"discord": ["database"]})
     await Tortoise.generate_schemas(safe=True)
     await bot.login(os.getenv("BOT_TOKEN"))
