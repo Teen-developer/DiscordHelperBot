@@ -62,7 +62,7 @@ class ReviewFormView(View):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, timeout=None)
 
-    @button(label="Записаться", style=discord.ButtonStyle.green, emoji="📃")
+    @button(label="Записаться", style=discord.ButtonStyle.green, emoji="📃", custom_id="review-button-add")
     async def appoint(self, button: discord.ui.Button, interaction: discord.Interaction):
         user_present = await Review.check_if_user_present(interaction.user.id)
         if user_present is None:
@@ -73,7 +73,7 @@ class ReviewFormView(View):
 
         await interaction.response.send_modal(ReviewFormModal())
 
-    @button(label="Отмена записи", style=discord.ButtonStyle.red, emoji="✖️")
+    @button(label="Отмена записи", style=discord.ButtonStyle.red, emoji="✖️", custom_id="review-button-cancel")
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
         status = await Review.delete_entry_if_present(interaction.user.id)
 
