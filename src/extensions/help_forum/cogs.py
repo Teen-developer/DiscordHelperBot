@@ -5,9 +5,9 @@ from discord.ext import commands
 from tortoise.transactions import in_transaction
 from .views import JumpView
 from .exceptions import NotInHelpForum, ThreadAlreadyAnswered, NotAThreadOwner
-from .settings import (HELP_FORUM_ID,
-                       INITIAL_MESSAGE_EMBED_IMAGE_URL,
-                       HELPER_ROLE_ID, BOT_MESSAGE_CHANNEL_ID) 
+from settings import (HELP_FORUM_ID,
+                      INITIAL_MESSAGE_EMBED_IMAGE_URL,
+                      HELPER_ROLE_ID, BOT_MESSAGE_CHANNEL_ID) 
 from .checkers import (no_thread_solution_yet,
                        thread_owner_only)
 from database import Ticket, User, UserLevelChange
@@ -98,7 +98,7 @@ class HelpCog(discord.Cog):
         await User.get_or_create(id=member.id)
     
     @discord.Cog.listener()
-    async def on_raw_member_remove(payload: discord.RawMemberRemoveEvent):
+    async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent):
         user = await User.get_or_none(id=payload.user.id)
         if user:
             await user.delete()

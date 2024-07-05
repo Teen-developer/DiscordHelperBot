@@ -8,7 +8,7 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 intents = discord.Intents.default()
 intents.members = True
-bot = discord.Bot(debug_guilds=[696434683730329713], loop=loop, intents=intents)
+bot = discord.Bot(loop=loop, intents=intents)
 
 
 @bot.event
@@ -25,6 +25,7 @@ async def register_all_users():
 
 async def main():
     bot.load_extension(name="extensions.help_forum.setup")
+    bot.load_extension(name="extensions.code_review.setup")
     await Tortoise.init(
         db_url=(
             f"asyncpg://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"

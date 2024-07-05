@@ -1,10 +1,12 @@
 import bisect
+import discord
 import tortoise
 import tortoise.fields
 
 from enum import IntEnum
 from datetime import datetime
-from utils import save_model_after
+from typing import Optional
+from settings import BOT_IMPORTANT_MESSAGES_CHANNEL
 
 
 class TicketStatus(IntEnum):
@@ -22,6 +24,92 @@ class UserLevelChange(IntEnum):
     level_up = -1
     same = 0
     level_down = 1
+
+
+class Review(tortoise.Model):
+    id = tortoise.fields.IntField(primary_key=True)
+    started_at = tortoise.fields.DatetimeField(auto_now_add=True)
+    closed_at = tortoise.fields.DatetimeField()
+    message_id = tortoise.fields.BigIntField()
+
+    @classmethod
+    def get_active_or_none(cls, **kwargs):
+        current_time = datetime.now()
+        return cls.get_or_none(started_at__lte=current_time, closed_at__gte=current_time, **kwargs)
+
+    @classmethod
+    async def check_if_user_present(cls, discord_id: int) -> Optional[bool]:
+        """
+            Проверяет, записан ли пользователь на код-ревью или нет.
+            Возвращает `None` если нет сбора заявок или `bool`, обозначающий
+            наличие заявки от пользователя, в противном случае
+        """
+        review = await cls.get_active_or_none().prefetch_related("entries")
+        if not review:
+            return None
+        
+        for entr in review.entries:
+            if entr.discord_id == discord_id:
+                return True
+        
+        return False
+
+    @classmethod
+    async def delete_entry_if_present(cls, discord_id: int) -> Optional[bool]:
+        """
+            Удаляет запись участника на код-ревью по `discord_id`.
+            Возвращает `None` если нет сбора заявок. Иначе `bool` - статус операции
+        """
+        review = await cls.get_active_or_none().prefetch_related("entries")
+
+        if not review:
+            return None
+
+        for entry in review.entries:
+            if entry.discord_id == discord_id:
+                await entry.delete()
+                return True
+
+        return False
+
+    @property
+    def seconds_until_finished(self):
+        current_time = datetime.now().astimezone()
+        return max((self.closed_at - current_time).total_seconds(), 0)
+    
+    async def close(self, bot: discord.Bot):
+        participants = await self.entries.all()
+        channel = (
+            bot.get_channel(BOT_IMPORTANT_MESSAGES_CHANNEL) or
+            await bot.fetch_channel(BOT_IMPORTANT_MESSAGES_CHANNEL)
+        )
+
+        message = await channel.fetch_message(self.message_id)
+        await message.edit(view=None)
+        if participants:
+            users_string = "\n".join(f"<@{user.discord_id}>" for user in participants)
+            await message.reply(
+                content=(
+                    "## Приём заявок на код-ревью завершён!\n"
+                    "📃Список участвующих:\n"
+                    f'{users_string}\n'
+                    "В этот канал скоро придёт информация со временем начала стрима =)"
+                )
+            )
+        else:
+            await message.reply(
+                "Код-ревью отменено, так как никто на него не записался. Очень жаль 😢"
+            )
+
+
+class ReviewEntry(tortoise.Model):
+    review = tortoise.fields.ForeignKeyField("discord.Review",
+                                             related_name="entries")
+    discord_id = tortoise.fields.BigIntField()
+    description = tortoise.fields.CharField(max_length=1000)
+    github_url = tortoise.fields.CharField(max_length=100)
+    architecture_image_url = tortoise.fields.CharField(max_length=100, null=True)
+    check_modules = tortoise.fields.CharField(max_length=200)
 
 
 class User(tortoise.Model):
