@@ -59,6 +59,9 @@ class ReviewFormModal(Modal):
 
 
 class ReviewFormView(View):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, timeout=None)
+
     @button(label="Записаться", style=discord.ButtonStyle.green, emoji="📃")
     async def appoint(self, button: discord.ui.Button, interaction: discord.Interaction):
         user_present = await Review.check_if_user_present(interaction.user.id)
@@ -69,7 +72,7 @@ class ReviewFormView(View):
             return await interaction.respond("Вы уже записались на это код-ревью", ephemeral=True)
 
         await interaction.response.send_modal(ReviewFormModal())
-    
+
     @button(label="Отмена записи", style=discord.ButtonStyle.red, emoji="✖️")
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
         status = await Review.delete_entry_if_present(interaction.user.id)
@@ -81,7 +84,7 @@ class ReviewFormView(View):
             return await interaction.respond("Вы отменили запись", ephemeral=True)
         
         await interaction.respond("Вы ещё не записывались на это код-ревью", ephemeral=True)
-    
+
 
 class ReviewCog(discord.Cog):
     def __init__(self, bot: discord.Bot, *args, **kwargs):
