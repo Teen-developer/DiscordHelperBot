@@ -17,7 +17,6 @@ from database import Ticket, User, UserLevelChange
 class ReputationCog(discord.Cog):
     @discord.user_command(name="Показать карточку участника 🌟")
     async def reputation_check(self, ctx: discord.ApplicationContext, member: discord.Member):
-        await ctx.defer()
         if member.bot:
             return await ctx.respond("Вы не можете проверить уровень репутации у бота", ephemeral=True)
 
