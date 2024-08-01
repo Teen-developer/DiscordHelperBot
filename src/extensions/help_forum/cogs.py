@@ -5,11 +5,12 @@ from discord.ext import commands
 from tortoise.transactions import in_transaction
 from .views import JumpView
 from .exceptions import NotInHelpForum, ThreadAlreadyAnswered, NotAThreadOwner
-from settings import (HELP_FORUM_ID,
+from settings import (BOOSTY_HELP_MULTIPLIER, HELP_FORUM_ID,
                       INITIAL_MESSAGE_EMBED_IMAGE_URL,
                       HELPER_ROLE_ID, BOT_MESSAGE_CHANNEL_ID) 
 from .checkers import (no_thread_solution_yet,
                        thread_owner_only)
+from utils import get_boosty_level
 from database import Ticket, User, UserLevelChange
 
 
@@ -69,20 +70,26 @@ class HelpCog(discord.Cog):
             commands.is_owner()
         )]
     )
-
+    
     @discord.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread):
         if not thread.parent_id == HELP_FORUM_ID:
             return
 
+        boostyEligible = get_boosty_level(thread.owner) >= 1
         async with in_transaction():
-            await Ticket.create(owner_id=thread.owner_id, thread_id=thread.id)
+            bounty = 5
+            await Ticket.create(
+                owner_id=thread.owner_id,
+                thread_id=thread.id,
+                bounty=(bounty * BOOSTY_HELP_MULTIPLIER if boostyEligible else bounty)
+            )
             user = await User.get(id=thread.owner_id).only("id", "asked_questions")
             user.asked_questions += 1
             await user.save(update_fields=["asked_questions"])
 
         embed = discord.Embed(
-            title=f"Вопрос создан!",
+            title="Вопрос создан!",
             description=(
                 "В скором времени на него дадут ответ, просим немного подождать.\n"
                 "📝 Вы можете пометить ответ как решение нажав **ПКМ** на сообщение -> "
@@ -91,6 +98,15 @@ class HelpCog(discord.Cog):
             image=INITIAL_MESSAGE_EMBED_IMAGE_URL,
             color=0x4334eb,
         )
+
+        if boostyEligible:
+            embed.title = "🌠 Приоритетный вопрос создан!"
+            embed.color = 0xF15F2C
+            embed.description = (
+                f"> За ответ на этот вопрос будет выдано в **{BOOSTY_HELP_MULTIPLIER}** "
+                "раза больше репутации помощника\n\n" + embed.description
+            )
+            await thread.edit(name="⭐ "+thread.name)
 
         await thread.send(embed=embed)
 
@@ -158,6 +174,7 @@ class HelpCog(discord.Cog):
                 if level_change == UserLevelChange.level_up:
                     ctx.bot.dispatch("user_help_level_up", message.author, level)
 
+        # Маленький кусочек непонятного кода. Мне так захотелось)
         data = await asyncio.gather(
             message.add_reaction("✅"),
             ctx.respond(embed=success_embed),

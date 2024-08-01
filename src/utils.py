@@ -1,3 +1,5 @@
+import discord
+from settings import BOOSTY_LEVEL1_ROLE, BOOSTY_LEVEL2_ROLE, BOOSTY_LEVEL3_ROLE, BOOSTY_LEVEL4_ROLE
 from functools import wraps
 from tortoise import Model
 from tortoise.transactions import in_transaction
@@ -24,3 +26,16 @@ def save_model_after(f):
             await self.save()
             return result
     return wrapper
+
+
+def get_boosty_level(user: discord.Member) -> int:
+    for role in reversed(user.roles):
+        if role.id == BOOSTY_LEVEL4_ROLE:
+            return 4
+        if role.id == BOOSTY_LEVEL3_ROLE:
+            return 3
+        if role.id == BOOSTY_LEVEL2_ROLE:
+            return 2
+        if role.id == BOOSTY_LEVEL1_ROLE:
+            return 1
+    return 0
