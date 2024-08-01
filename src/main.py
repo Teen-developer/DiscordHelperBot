@@ -1,14 +1,22 @@
 import os
 import discord
 import asyncio
+
 from tortoise import Tortoise
 from database import User
+
+from settings import DEBUG, BOT_MAIN_GUILD
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 intents = discord.Intents.default()
 intents.members = True
-bot = discord.Bot(loop=loop, intents=intents)
+
+bot = discord.Bot(
+    loop=loop,
+    intents=intents,
+    debug_guilds=([BOT_MAIN_GUILD] if DEBUG else None)
+)
 
 
 @bot.event
@@ -18,7 +26,7 @@ async def on_ready():
 
 @bot.listen("on_ready", once=True)
 async def register_all_users():
-    async for member in bot.get_guild(696434683730329713).fetch_members(limit=None):
+    async for member in bot.get_guild(BOT_MAIN_GUILD).fetch_members(limit=None):
         await User.get_or_create(id=member.id)
     print("All missing users registered successfully!")
 
