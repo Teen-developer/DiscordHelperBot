@@ -5,10 +5,10 @@ services:
       - .env
     restart: unless-stopped
     depends_on:
-      postgres_db:
+      postgres-db:
         condition: service_healthy
 
-  postgres_db:
+  postgres-db:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
   
-  pg_admin:
+  pg-admin:
     image: dpage/pgadmin4
     restart: unless-stopped
     environment:

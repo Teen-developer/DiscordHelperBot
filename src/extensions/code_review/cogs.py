@@ -1,7 +1,7 @@
 import discord
 import asyncio
 from discord.ui import View, button, Modal, InputText
-from settings import BOT_IMPORTANT_MESSAGES_CHANNEL
+from settings import BOT_IMPORTANT_MESSAGES_CHANNEL, CODE_REVIEW_ROLE
 from database import Review, ReviewEntry
 from datetime import datetime, timedelta
 from discord.ext import commands
@@ -104,6 +104,7 @@ class ReviewCog(discord.Cog):
 
     @review.command()
     async def launch(self, ctx: discord.ApplicationContext, days: int):
+        await ctx.defer()
         if self.review_instance:
             return await ctx.respond("Уже есть активное ревью!", ephemeral=True)
 
@@ -129,8 +130,9 @@ class ReviewCog(discord.Cog):
             color=0x8ae378,
         )
 
+        roleToMention = ctx.guild.get_role(CODE_REVIEW_ROLE) or ctx.guild.default_role
         message = await ctx.bot.get_channel(BOT_IMPORTANT_MESSAGES_CHANNEL).send(
-            ctx.guild.default_role,
+            roleToMention.mention,
             embed=embed,
             view=ReviewFormView()
         )
@@ -148,7 +150,6 @@ class ReviewCog(discord.Cog):
 
         self.review_instance = await Review.get_active_or_none()
         if self.review_instance and self.delete_task is None:
-            print("Хых. Словил бибу")
             self.delete_task = asyncio.create_task(
                 self.close_review_on_timeout(self.review_instance, self.bot)
             )
