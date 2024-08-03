@@ -28,14 +28,22 @@ def save_model_after(f):
     return wrapper
 
 
+def role_to_boosty_level(role: discord.Role) -> int:
+    if role.id == BOOSTY_LEVEL4_ROLE:
+        return 4
+    if role.id == BOOSTY_LEVEL3_ROLE:
+        return 3
+    if role.id == BOOSTY_LEVEL2_ROLE:
+        return 2
+    if role.id == BOOSTY_LEVEL1_ROLE:
+        return 1
+    return 0
+
+
 def get_boosty_level(user: discord.Member) -> int:
     for role in reversed(user.roles):
-        if role.id == BOOSTY_LEVEL4_ROLE:
-            return 4
-        if role.id == BOOSTY_LEVEL3_ROLE:
-            return 3
-        if role.id == BOOSTY_LEVEL2_ROLE:
-            return 2
-        if role.id == BOOSTY_LEVEL1_ROLE:
-            return 1
+        if (level := role_to_boosty_level(role)) > 0:
+            print("BOOSTY LVL", level)
+            return level
+    print("BOOSTY LVL", 0)
     return 0

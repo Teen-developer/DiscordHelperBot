@@ -34,6 +34,7 @@ async def register_all_users():
 async def main():
     bot.load_extension(name="extensions.help_forum.setup")
     bot.load_extension(name="extensions.code_review.setup")
+    bot.load_extension(name="extensions.reactive.setup")
     await Tortoise.init(
         db_url=(
             f"asyncpg://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
@@ -41,6 +42,7 @@ async def main():
         modules={"discord": ["database"]})
     await Tortoise.generate_schemas(safe=True)
     await bot.login(os.getenv("BOT_TOKEN"))
+    bot.owner_id = (await bot.application_info()).owner.id
     await bot.connect(reconnect=True)
 
 
