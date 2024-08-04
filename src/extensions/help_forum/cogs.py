@@ -110,16 +110,6 @@ class HelpCog(discord.Cog):
         await thread.send(embed=embed)
 
     @discord.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        await User.get_or_create(id=member.id)
-    
-    @discord.Cog.listener()
-    async def on_raw_member_remove(self, payload: discord.RawMemberRemoveEvent):
-        user = await User.get_or_none(id=payload.user.id)
-        if user:
-            await user.delete()
-
-    @discord.Cog.listener()
     async def on_user_help_level_up(self, member: discord.Member, new_level: int):
         embed = discord.Embed(
             title="<:upvote:1154341416286298172> Уровень помощи вырос!",

@@ -43,7 +43,5 @@ def role_to_boosty_level(role: discord.Role) -> int:
 def get_boosty_level(user: discord.Member) -> int:
     for role in reversed(user.roles):
         if (level := role_to_boosty_level(role)) > 0:
-            print("BOOSTY LVL", level)
             return level
-    print("BOOSTY LVL", 0)
     return 0
